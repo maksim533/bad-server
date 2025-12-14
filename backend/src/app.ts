@@ -5,6 +5,7 @@ import 'dotenv/config'
 import express, { json, urlencoded } from 'express'
 import mongoose from 'mongoose'
 import path from 'path'
+import mongoSanitize from 'express-mongo-sanitize';
 import { limiter } from './middlewares/rate-limiter'
 import { DB_ADDRESS } from './config'
 import errorHandler from './middlewares/error-handler'
@@ -20,12 +21,13 @@ app.use(cookieParser())
 app.use(cors({ origin: ORIGIN_ALLOW, credentials: true }));
 // app.use(express.static(path.join(__dirname, 'public')));
 app.use(limiter)
+app.use(mongoSanitize());
 app.use(serveStatic(path.join(__dirname, 'public')))
 
 app.use(urlencoded({ extended: true }))
 app.use(json())
 
-app.options('*', cors())
+// app.options('*', cors())
 app.use(routes)
 app.use(errors())
 app.use(errorHandler)
