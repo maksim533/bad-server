@@ -11,6 +11,7 @@ import { DB_ADDRESS } from './config'
 import errorHandler from './middlewares/error-handler'
 import serveStatic from './middlewares/serverStatic'
 import routes from './routes'
+import { mongoSanitizeMiddleware } from './middlewares/mongo-sanitize'
 
 const { PORT = 3000 } = process.env
 const { ORIGIN_ALLOW } = process.env
@@ -21,6 +22,7 @@ app.use(cookieParser())
 app.use(cors({ origin: ORIGIN_ALLOW, credentials: true }));
 // app.use(express.static(path.join(__dirname, 'public')));
 app.use(limiter)
+app.use(mongoSanitizeMiddleware)
 app.use(mongoSanitize({
   replaceWith: '_',
   allowDots: false,
