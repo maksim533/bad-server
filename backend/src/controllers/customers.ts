@@ -3,6 +3,7 @@ import { FilterQuery } from 'mongoose'
 import NotFoundError from '../errors/not-found-error'
 import Order from '../models/order'
 import User, { IUser } from '../models/user'
+import BadRequestError from '../errors/bad-request-error'
 
 // TODO: Добавить guard admin
 // eslint-disable-next-line max-len
@@ -27,8 +28,15 @@ export const getCustomers = async (
             orderCountFrom,
             orderCountTo,
             search,
+
         } = req.query
 
+        const pageNum = Math.max(1, Number(page) || 1);
+        const limitNum = Math.max(1, Math.min(Number(limit) || 10, 10));
+
+         if (Number.isNaN(pageNum) || Number.isNaN(limitNum)) {
+            throw new BadRequestError('Некорректные параметры пагинации');
+        }
         const filters: FilterQuery<Partial<IUser>> = {}
 
         if (registrationDateFrom) {
@@ -116,8 +124,8 @@ export const getCustomers = async (
 
         const options = {
             sort,
-            skip: (Number(page) - 1) * Number(limit),
-            limit: Number(limit),
+            skip: (pageNum - 1) * limitNum,
+            limit: limitNum,
         }
 
         const users = await User.find(filters, null, options).populate([
@@ -137,15 +145,15 @@ export const getCustomers = async (
         ])
 
         const totalUsers = await User.countDocuments(filters)
-        const totalPages = Math.ceil(totalUsers / Number(limit))
+        const totalPages = Math.ceil(totalUsers / limitNum)
 
         res.status(200).json({
             customers: users,
             pagination: {
                 totalUsers,
                 totalPages,
-                currentPage: Number(page),
-                pageSize: Number(limit),
+                currentPage: pageNum,
+                pageSize: limitNum,
             },
         })
     } catch (error) {
